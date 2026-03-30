@@ -19,14 +19,17 @@ export const resolveZ3R4HRoutedModelId = ({
 	selectedModelIds: string[];
 	atSelectedModelId?: string;
 }): RoutedModelResult => {
+	const normalizedAvailableIds = [...new Set((availableModelIds ?? []).filter((id) => typeof id === 'string' && id.trim().length > 0))];
+	const normalizedSelectedIds = [...new Set((selectedModelIds ?? []).filter((id) => typeof id === 'string' && id.trim().length > 0))];
+
 	const mappedId = modeModelMap?.[mode] ?? null;
 
-	if (mappedId && availableModelIds.includes(mappedId)) {
+	if (mappedId && normalizedAvailableIds.includes(mappedId)) {
 		return { modelId: mappedId, reason: 'mode-mapped', missingMappedModel: false };
 	}
 
-	const selectedId = atSelectedModelId || selectedModelIds.find((id) => !!id) || null;
-	if (selectedId && availableModelIds.includes(selectedId)) {
+	const selectedId = atSelectedModelId || normalizedSelectedIds.find((id) => !!id) || null;
+	if (selectedId && normalizedAvailableIds.includes(selectedId)) {
 		return {
 			modelId: selectedId,
 			reason: 'selected',
@@ -34,9 +37,9 @@ export const resolveZ3R4HRoutedModelId = ({
 		};
 	}
 
-	if (availableModelIds.length > 0) {
+	if (normalizedAvailableIds.length > 0) {
 		return {
-			modelId: availableModelIds[0],
+			modelId: normalizedAvailableIds[0],
 			reason: 'first-available',
 			missingMappedModel: Boolean(mappedId)
 		};

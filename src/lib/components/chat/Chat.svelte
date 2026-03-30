@@ -1956,11 +1956,12 @@
 		const responseMessageIds: Record<PropertyKey, string> = {};
 		const availableModelIds = $models.map((m) => m.id);
 
+		// Resolve effective routed model strictly from current runtime model IDs.
 		const routedModel = resolveZ3R4HRoutedModelId({
 			mode: selectedZ3R4HMode,
 			modeModelMap: z3r4hModeModelMap,
 			availableModelIds,
-			selectedModelIds: selectedModels,
+			selectedModelIds,
 			atSelectedModelId: atSelectedModel?.id
 		});
 

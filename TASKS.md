@@ -77,3 +77,9 @@ Prepare:
 - Installer generation/signing
 - CI/release automation
 - Bundled Open WebUI runtime build/distribution workflow
+
+
+## Completed (Task 8, Revised)
+- Confirmed local mode-to-model routing resolves only against runtime `model.id` values.
+- Kept routing deterministic with explicit fallback order: mode-mapped -> selected -> first-available -> none.
+- Preserved existing prompt-stack behavior (no change to prompt composition).

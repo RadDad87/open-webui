@@ -79,3 +79,10 @@
 - Installer generation/signing
 - CI/release automation
 - Bundled Open WebUI runtime build/distribution workflow
+
+
+## Task 8 Revised Routing Status
+- Routing remains local-only and deterministic via `resolveZ3R4HRoutedModelId` in `src/lib/utils/z3r4hModeRouting.ts`.
+- Effective model resolution in chat send path occurs in `src/lib/components/chat/Chat.svelte` (`sendMessage`, routedModel block).
+- Fallback order is unchanged: mode-mapped -> selected -> first-available -> none; warning shown when mapped model is unavailable.
+- Prompt-stack composition remains unchanged (`composeZ3R4HPromptStack`).
