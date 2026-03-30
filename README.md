@@ -271,3 +271,24 @@ Edit top variables in `launch_z3r4h.bat` before first run:
 - `OPEN_WEBUI_START_CMD`
 - `OPEN_WEBUI_URL`
 - `LOG_FILE`
+
+### Z3R4H Windows-Local Verification Checklist
+
+1. Set launcher variables in `launch_z3r4h.bat` (`LLAMA_SERVER_EXE`, `MODEL_PATH`, ports/URL).
+2. Run `launch_z3r4h.bat`.
+3. Confirm launcher log shows:
+   - llama.cpp started and ready
+   - Open WebUI started and ready
+4. Confirm browser opens the configured local URL.
+5. Confirm Z3R4H Mode selector is visible in chat.
+6. Send one local prompt and verify a response is returned.
+7. Confirm offline-hardening behavior in launcher path:
+   - no login prompt
+   - community sharing disabled
+   - web search disabled
+
+### Troubleshooting (Windows Local)
+
+- **Missing llama.cpp executable/model:** verify `LLAMA_SERVER_EXE` and `MODEL_PATH`.
+- **Startup timeout:** check `z3r4h_launcher.log`, then verify port availability and local endpoint values.
+- **Open WebUI command not found:** ensure `open-webui` is installed and available in PATH.

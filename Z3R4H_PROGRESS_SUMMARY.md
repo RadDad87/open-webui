@@ -44,5 +44,9 @@
 ## Current Branch
 - `work`
 
+## Task 7 Readiness Status
+- Added Windows-local verification checklist and troubleshooting notes to `README.md`.
+- Packaging readiness is currently documentation-focused (run/verify/package prep), with no installer generation.
+
 ## Next Recommended Task
-- **Task 7 — Packaging and docs:** finalize folder structure, run instructions, troubleshooting guide, and offline usage notes for distribution.
+- Prepare release packaging artifacts/checklist (outside current scope), then validate on a clean Windows environment.
