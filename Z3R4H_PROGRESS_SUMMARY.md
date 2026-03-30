@@ -60,3 +60,22 @@
 - Defined a portable Windows package layout in `README.md`.
 - Updated launcher defaults to use `%~dp0`-anchored relative paths for llama.cpp server and model paths.
 - Documented external Open WebUI CLI mode vs optional bundled runtime command mode.
+
+
+## Task 11 Validation/Triage Status
+- Expanded clean-machine checklist into an execution-ready Windows-local validation flow.
+- Added ranked blocker candidates with launch-readiness prioritization (P0/P1/P2).
+- Added structured blocker register fields (stage, repro reliability, evidence, action owner).
+- Scope kept documentation/review-only; no backend/product behavior changes.
+
+### Task 11 Initial Risk Ranking
+1. **P0 candidate:** External `open-webui` PATH dependency in default mode on clean machines.
+2. **P0/P1 candidate:** PowerShell readiness-probe environment/policy assumptions.
+3. **P1 candidate:** Port conflicts on 11434/8080 causing startup timeout symptoms.
+4. **P1 candidate:** Packaged model path/filename mismatch vs launcher default.
+5. **P1/P2 candidate:** Fresh-profile localStorage state assumptions for mode routing.
+
+### Still Deferred Beyond Task 11
+- Installer generation/signing
+- CI/release automation
+- Bundled Open WebUI runtime build/distribution workflow

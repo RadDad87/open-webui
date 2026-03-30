@@ -65,3 +65,15 @@ Prepare:
 ## Completed (Task 10)
 - Documented portable Windows package layout and runtime requirements in `README.md`.
 - Updated launcher defaults to `%~dp0`-relative paths for portability.
+
+
+## Completed (Task 11)
+- Converted clean-environment checklist into an execution-ready Windows clean-machine validation flow.
+- Added highest-risk blocker candidates and P0/P1/P2 prioritization rules.
+- Added blocker register fields for triage evidence and release-gate decisions.
+- Kept scope documentation/review-only with no product/backend behavior changes.
+
+## Deferred (Beyond Task 11)
+- Installer generation/signing
+- CI/release automation
+- Bundled Open WebUI runtime build/distribution workflow

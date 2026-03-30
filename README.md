@@ -327,3 +327,16 @@ Use `Z3R4H_CLEAN_ENV_CHECKLIST.md` for a clean-machine launch/readiness pass foc
 - startup validation
 - offline-hardening validation
 - hidden assumptions and launch blockers
+
+### Task 11 Validation Focus (Windows Local)
+
+For Task 11, treat this as a **validation-only** pass (no behavior changes by default):
+- run the execution-ready clean-machine flow in `Z3R4H_CLEAN_ENV_CHECKLIST.md`
+- rank blockers as P0/P1/P2 for launch-readiness decisions
+- record hidden assumptions with concrete repro evidence
+
+Highest-risk items to validate first:
+- default external `open-webui` PATH dependency
+- PowerShell readiness-probe assumptions
+- local port conflicts (11434/8080)
+- packaged model path/filename mismatch

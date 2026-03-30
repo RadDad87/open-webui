@@ -12,7 +12,9 @@ This checklist validates launch readiness on a clean Windows machine for the cur
 - `launch_z3r4h.bat` exists at repo root.
 - `LLAMA_SERVER_EXE` path is valid.
 - `MODEL_PATH` path is valid.
-- `open-webui` command resolves in PATH.
+- Determine startup mode before launch:
+  - External CLI mode: `open-webui` command resolves in PATH.
+  - Bundled runtime mode: `OPEN_WEBUI_START_CMD` points to packaged executable.
 - Local ports configured for llama.cpp and Open WebUI are available.
 
 ## 2b) Portable Layout Preflight
@@ -75,3 +77,43 @@ For each blocker, capture:
 - Expected vs actual result
 - Log snippet path/time
 - Candidate fix (if known)
+
+
+## 10) Task 11 Execution Flow (Clean Machine, Windows)
+1. Capture baseline: Windows version, shell (CMD/PowerShell), AV/firewall posture.
+2. Verify portable layout from launcher directory (`%~dp0`) after moving package folder.
+3. Run preflight gates: startup mode, paths, model artifact, ports, and PowerShell readiness-probe capability.
+4. Execute cold launch (`launch_z3r4h.bat`) and capture first-failure stage if unsuccessful.
+5. Validate readiness endpoints and browser open behavior; confirm startup sequence in `z3r4h_launcher.log`.
+6. Execute UI/runtime smoke checks: mode selector present + one successful local response.
+7. Execute negative-path checks: missing binary/model, missing PATH command, and port conflicts.
+8. Record blockers into ranked register and assign release-gate status (P0/P1/P2).
+
+## 11) Highest-Risk Blockers (Packaging Readiness)
+- **P0 candidate:** Default startup mode depends on `open-webui` in PATH (clean-machine failure risk).
+- **P0/P1 candidate:** Readiness probes depend on PowerShell `Invoke-WebRequest` behavior/policy.
+- **P1 candidate:** Port conflicts on `11434` (llama.cpp) or `8080` (Open WebUI) appear as startup timeout.
+- **P1 candidate:** Default model path/file (`models\model.gguf`) may not match packaged artifact name.
+- **P1/P2 candidate:** Fresh-profile localStorage state for mode routing may be absent/corrupt.
+
+## 12) Blocker Prioritization Rules
+- **P0:** Prevents clean-machine launch in the intended default package flow.
+- **P1:** Launch possible, but core local usability/hardening expectation fails.
+- **P2:** Non-blocking friction or documentation clarity issue with workaround.
+
+## 13) Blocker Register (Task 11)
+Capture each finding with:
+- ID
+- Severity (P0/P1/P2)
+- Stage (preflight/startup/runtime)
+- Repro reliability (always/intermittent)
+- Expected vs actual
+- Evidence (`z3r4h_launcher.log` timestamp + console symptom)
+- Proposed next action (doc-only, launcher change, packaging change)
+- Owner and status
+
+## 14) Deferred Beyond Task 11
+- Installer generation/signing
+- CI/release automation
+- Bundled Open WebUI runtime build/distribution workflow
+- Product/backend behavior changes unless a verified P0 requires escalation
