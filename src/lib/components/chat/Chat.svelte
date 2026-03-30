@@ -64,6 +64,7 @@
 		displayFileHandler
 	} from '$lib/utils';
 	import { AudioQueue } from '$lib/utils/audio';
+	import { composeZ3R4HPromptStack } from '$lib/utils/z3r4hPromptStack';
 
 	import {
 		archiveChatById,
@@ -134,6 +135,7 @@
 	let eventCallback = null;
 
 	let selectedModels = [''];
+	let selectedZ3R4HMode = 'General Advisor';
 	let atSelectedModel: Model | undefined;
 	let selectedModelIds = [];
 	$: if (atSelectedModel !== undefined) {
@@ -642,6 +644,9 @@
 	$: if (selectedModels !== null) {
 		savedModelIds();
 	}
+	$: if (typeof window !== 'undefined') {
+		localStorage.setItem('z3r4h_mode', selectedZ3R4HMode);
+	}
 
 	const stopAudio = () => {
 		try {
@@ -657,6 +662,11 @@
 		$socket?.on('events', chatEventHandler);
 
 		$audioQueue?.destroy();
+
+		const savedZ3R4HMode = localStorage.getItem('z3r4h_mode');
+		if (savedZ3R4HMode) {
+			selectedZ3R4HMode = savedZ3R4HMode;
+		}
 
 		const audioQueueInstance = new AudioQueue(document.getElementById('audioElement'));
 		audioQueue.set(audioQueueInstance);
@@ -2123,11 +2133,15 @@
 			params?.stream_response ??
 			true;
 
+		const baseSystemPrompt = `${params?.system ?? $settings?.system ?? ''}`.trim();
+		const z3r4hPromptStack = composeZ3R4HPromptStack(selectedZ3R4HMode);
+		const effectiveSystemPrompt = [baseSystemPrompt, z3r4hPromptStack].filter(Boolean).join('\n\n').trim();
+
 		let messages = [
-			params?.system || $settings.system
+			effectiveSystemPrompt
 				? {
 						role: 'system',
-						content: `${params?.system ?? $settings?.system ?? ''}`
+						content: effectiveSystemPrompt
 					}
 				: undefined,
 			..._messages.map((message) => ({
@@ -2755,11 +2769,12 @@
 								timestamp: Date.now()
 							}
 						}}
-						{history}
-						title={$chatTitle}
-						bind:selectedModels
-						shareEnabled={!!history.currentId}
-						{initNewChat}
+							{history}
+							title={$chatTitle}
+							bind:selectedModels
+							bind:selectedZ3R4HMode
+							shareEnabled={!!history.currentId}
+							{initNewChat}
 						{archiveChatHandler}
 						{moveChatHandler}
 						onSaveTempChat={async () => {
