@@ -237,3 +237,93 @@ If you have any questions, suggestions, or need assistance, please open an issue
 ---
 
 Created by [Timothy Jaeryang Baek](https://github.com/tjbck) - Let's make Open WebUI even more amazing together! 💪
+
+## Z3R4H Windows Local Launcher (offline/localhost)
+
+For Z3R4H local development on Windows (no Docker), use `launch_z3r4h.bat` at the repo root.
+
+- Starts local `llama.cpp` server
+- Starts Open WebUI with local OpenAI-compatible backend settings
+- Waits for both services to become reachable
+- Opens Open WebUI in the default browser
+- Logs to `z3r4h_launcher.log`
+
+The launcher enforces localhost-only endpoints and uses verified Open WebUI environment variables from this codebase:
+- `ENABLE_OPENAI_API=True`
+- `OPENAI_API_BASE_URLS=http://127.0.0.1:<LLAMA_PORT>/v1`
+- `OPENAI_API_KEYS=` (empty)
+
+For Z3R4H offline/local startup, the launcher also applies:
+- `OFFLINE_MODE=True`
+- `WEBUI_AUTH=False`
+- `ENABLE_LOGIN_FORM=False`
+- `ENABLE_SIGNUP=False`
+- `ENABLE_COMMUNITY_SHARING=False`
+- `ENABLE_WEB_SEARCH=False`
+
+This reduces cloud-first/community surfaces in the Z3R4H launcher path while preserving local chat usage.
+
+Edit top variables in `launch_z3r4h.bat` before first run:
+- `LLAMA_SERVER_EXE`
+- `MODEL_PATH`
+- `LLAMA_HOST`
+- `LLAMA_PORT`
+- `OPEN_WEBUI_START_CMD`
+- `OPEN_WEBUI_URL`
+- `LOG_FILE`
+
+### Portable Package Layout (Windows)
+
+```text
+Z3R4H/
+├─ launch_z3r4h.bat
+├─ models/
+│  └─ model.gguf
+├─ runtime/
+│  └─ llama.cpp/
+│     └─ llama-server.exe
+└─ z3r4h_launcher.log   (created at runtime)
+```
+
+Launcher defaults are now relative to `%~dp0` (the launcher directory), so the package can be moved without editing absolute paths.
+
+Open WebUI startup options:
+- **External CLI mode (default):** `open-webui serve` (requires `open-webui` in PATH)
+- **Bundled runtime mode (optional):** point `OPEN_WEBUI_START_CMD` to a bundled executable path under `runtime/`
+
+Required at runtime:
+- `launch_z3r4h.bat`
+- `runtime/llama.cpp/llama-server.exe` (or equivalent configured path)
+- `models/<your-model>.gguf`
+- Local port availability for llama.cpp + Open WebUI
+- Write access for `z3r4h_launcher.log`
+
+### Z3R4H Windows-Local Verification Checklist
+
+1. Set launcher variables in `launch_z3r4h.bat` (`LLAMA_SERVER_EXE`, `MODEL_PATH`, ports/URL).
+2. Run `launch_z3r4h.bat`.
+3. Confirm launcher log shows:
+   - llama.cpp started and ready
+   - Open WebUI started and ready
+4. Confirm browser opens the configured local URL.
+5. Confirm Z3R4H Mode selector is visible in chat.
+6. Send one local prompt and verify a response is returned.
+7. Confirm offline-hardening behavior in launcher path:
+   - no login prompt
+   - community sharing disabled
+   - web search disabled
+
+### Troubleshooting (Windows Local)
+
+- **Missing llama.cpp executable/model:** verify `LLAMA_SERVER_EXE` and `MODEL_PATH`.
+- **Startup timeout:** check `z3r4h_launcher.log`, then verify port availability and local endpoint values.
+- **Open WebUI command not found:** ensure `open-webui` is installed and available in PATH.
+
+
+### Clean-Environment Launch Review (Windows)
+
+Use `Z3R4H_CLEAN_ENV_CHECKLIST.md` for a clean-machine launch/readiness pass focused on:
+- preflight requirements
+- startup validation
+- offline-hardening validation
+- hidden assumptions and launch blockers
