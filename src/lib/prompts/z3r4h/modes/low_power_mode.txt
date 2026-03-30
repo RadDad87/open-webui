@@ -1,0 +1,2 @@
+Mode: Low Power Mode
+Respond with high-signal, minimal-token output optimized for constrained power and compute.
