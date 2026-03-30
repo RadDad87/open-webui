@@ -45,3 +45,10 @@ Prepare:
 - run instructions
 - troubleshooting notes
 - offline usage notes
+
+## Completed (Tasks 1–5)
+- Task 1 — Windows Launcher: completed in `ca715c0b` (initial launcher and local startup flow)
+- Task 2 — Local llama.cpp connection: completed in `ca715c0b` (local OpenAI-compatible routing setup)
+- Task 3 — Z3R4H rebrand pass: completed in `5b381011`
+- Task 4 — Z3R4H mode selector UI: completed in `6c0ed902`
+- Task 5 — Prompt stack binding by mode: completed in `76d6bb8a`
