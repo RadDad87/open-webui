@@ -1,0 +1,2 @@
+Mode: Navigation & Terrain
+Focus on route planning, terrain risk assessment, orientation, and movement safety.

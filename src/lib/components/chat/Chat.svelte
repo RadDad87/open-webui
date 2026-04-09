@@ -64,6 +64,8 @@
 		displayFileHandler
 	} from '$lib/utils';
 	import { AudioQueue } from '$lib/utils/audio';
+	import { composeZ3R4HPromptStack } from '$lib/utils/z3r4hPromptStack';
+	import { resolveZ3R4HRoutedModelId, type Z3R4HModeModelMap } from '$lib/utils/z3r4hModeRouting';
 
 	import {
 		archiveChatById,
@@ -134,6 +136,8 @@
 	let eventCallback = null;
 
 	let selectedModels = [''];
+	let selectedZ3R4HMode = 'General Advisor';
+	let z3r4hModeModelMap: Z3R4HModeModelMap = {};
 	let atSelectedModel: Model | undefined;
 	let selectedModelIds = [];
 	$: if (atSelectedModel !== undefined) {
@@ -643,6 +647,26 @@
 		savedModelIds();
 	}
 
+	$: if (typeof window !== 'undefined') {
+		localStorage.setItem('z3r4h_mode', selectedZ3R4HMode);
+	}
+
+	$: if (typeof window !== 'undefined') {
+		localStorage.setItem('z3r4h_mode_model_map', JSON.stringify(z3r4hModeModelMap));
+	}
+
+	$: {
+		const selectedId = atSelectedModel?.id ?? selectedModels.find((id) => !!id) ?? null;
+		if (selectedId && $models.some((m) => m.id === selectedId)) {
+			if (z3r4hModeModelMap[selectedZ3R4HMode] !== selectedId) {
+				z3r4hModeModelMap = {
+					...z3r4hModeModelMap,
+					[selectedZ3R4HMode]: selectedId
+				};
+			}
+		}
+	}
+
 	const stopAudio = () => {
 		try {
 			speechSynthesis.cancel();
@@ -657,6 +681,20 @@
 		$socket?.on('events', chatEventHandler);
 
 		$audioQueue?.destroy();
+
+		const savedZ3R4HMode = localStorage.getItem('z3r4h_mode');
+		if (savedZ3R4HMode) {
+			selectedZ3R4HMode = savedZ3R4HMode;
+		}
+
+		const savedZ3R4HModeModelMap = localStorage.getItem('z3r4h_mode_model_map');
+		if (savedZ3R4HModeModelMap) {
+			try {
+				z3r4hModeModelMap = JSON.parse(savedZ3R4HModeModelMap);
+			} catch (e) {
+				console.warn('Failed to parse z3r4h_mode_model_map');
+			}
+		}
 
 		const audioQueueInstance = new AudioQueue(document.getElementById('audioElement'));
 		audioQueue.set(audioQueueInstance);
@@ -1916,12 +1954,29 @@
 		_history = structuredClone(_history);
 
 		const responseMessageIds: Record<PropertyKey, string> = {};
-		// If modelId is provided, use it, else use selected model
+		const availableModelIds = $models.map((m) => m.id);
+
+		// Resolve effective routed model strictly from current runtime model IDs.
+		const routedModel = resolveZ3R4HRoutedModelId({
+			mode: selectedZ3R4HMode,
+			modeModelMap: z3r4hModeModelMap,
+			availableModelIds,
+			selectedModelIds,
+			atSelectedModelId: atSelectedModel?.id
+		});
+
+		if (!modelId && routedModel.missingMappedModel) {
+			toast.warning($i18n.t('Routed mode model unavailable; using selected local model.'));
+		}
+
+		// If modelId is provided, use it. Otherwise route by current Z3R4H mode.
 		let selectedModelIds = modelId
 			? [modelId]
-			: atSelectedModel !== undefined
-				? [atSelectedModel.id]
-				: selectedModels;
+			: routedModel.modelId
+				? [routedModel.modelId]
+				: atSelectedModel !== undefined
+					? [atSelectedModel.id]
+					: selectedModels;
 
 		// Create response messages for each selected model
 		for (const [_modelIdx, modelId] of selectedModelIds.entries()) {
@@ -2123,11 +2178,15 @@
 			params?.stream_response ??
 			true;
 
+		const baseSystemPrompt = `${params?.system ?? $settings?.system ?? ''}`.trim();
+		const z3r4hPromptStack = composeZ3R4HPromptStack(selectedZ3R4HMode);
+		const effectiveSystemPrompt = [baseSystemPrompt, z3r4hPromptStack].filter(Boolean).join('\n\n').trim();
+
 		let messages = [
-			params?.system || $settings.system
+			effectiveSystemPrompt
 				? {
 						role: 'system',
-						content: `${params?.system ?? $settings?.system ?? ''}`
+						content: effectiveSystemPrompt
 					}
 				: undefined,
 			..._messages.map((message) => ({
@@ -2755,11 +2814,12 @@
 								timestamp: Date.now()
 							}
 						}}
-						{history}
-						title={$chatTitle}
-						bind:selectedModels
-						shareEnabled={!!history.currentId}
-						{initNewChat}
+							{history}
+							title={$chatTitle}
+							bind:selectedModels
+							bind:selectedZ3R4HMode
+							shareEnabled={!!history.currentId}
+							{initNewChat}
 						{archiveChatHandler}
 						{moveChatHandler}
 						onSaveTempChat={async () => {
