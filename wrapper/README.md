@@ -79,3 +79,17 @@ This folder contains the minimal C#/.NET scaffold for the planned `.exe`-first w
 - Embedded UI
 - Advanced process supervision
 - Installer/signing/build automation
+
+
+## Task 25 Package-Root Resolution Blocker Fix
+- Default package-root detection is now anchored to runtime package layout instead of fixed upward traversal.
+- Wrapper now logs:
+  - resolved package root and resolution source (`arg` vs `auto`)
+  - resolved llama executable path
+  - resolved BAT fallback path
+- Fallback and runtime paths are derived from resolved package root.
+
+### Quick verification (RC package)
+Run:
+- `Z3R4H.Wrapper.exe`
+Expect config logs to show package root under your RC folder (not `C:\\`) and BAT path as `<package-root>\\launch_z3r4h.bat`.

@@ -244,3 +244,14 @@ Prepare:
 - Embedded UI
 - Advanced process supervision/restart policy
 - Installer/signing/build automation
+
+
+## Completed (Task 25)
+- Fixed wrapper package-root auto-detection for published RC layout.
+- Fixed default llama and BAT path derivation from resolved package root.
+- Added explicit startup logging for resolution source, package root, llama path, and BAT path.
+
+## Deferred (Beyond Task 25)
+- Embedded UI
+- Advanced process supervision/restart policy
+- Installer/signing/build automation

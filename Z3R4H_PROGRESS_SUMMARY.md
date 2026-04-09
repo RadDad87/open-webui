@@ -324,3 +324,19 @@
 - Embedded UI
 - Advanced supervision/restart lifecycle
 - Build/release pipeline + installer/signing
+
+
+## Task 25 Package-Root Resolution Fix Status
+- Fixed wrapper default package-root detection to align with RC packaged layout.
+- Resolved runtime/fallback defaults now derive from detected package root instead of filesystem root.
+- Added startup logs for package-root source, resolved package root, resolved llama path, and resolved BAT path.
+
+### Task 25 Milestone Delivers
+1. Correct package-root auto-detection in RC wrapper-first runs
+2. Correct default path resolution for llama runtime and BAT fallback
+3. Operator-visible path resolution diagnostics at startup
+
+### Still Deferred Beyond Task 25
+- Embedded UI
+- Advanced supervision/restart lifecycle
+- Build/release pipeline + installer/signing

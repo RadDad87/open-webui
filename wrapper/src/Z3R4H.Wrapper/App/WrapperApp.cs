@@ -15,7 +15,7 @@ public sealed class WrapperApp(
 	{
 		try
 		{
-			logger.Stage("startup", "Task 22 wrapper milestone starting");
+			logger.Stage("startup", "Task 25 wrapper milestone starting");
 			WrapperConfig config;
 			try
 			{
@@ -27,8 +27,10 @@ public sealed class WrapperApp(
 				return new StartupResult(false, (int)WrapperExitCode.ConfigResolutionFailed, ex.Message, WrapperErrorCategory.ConfigError, "config");
 			}
 
-			logger.Stage("config", $"Resolved package root: {config.PackageRoot}");
-			logger.Info($"StartupMode={config.StartupMode}; FallbackMode={config.FallbackMode}; Llama={config.LlamaServerExePath}; WebUI={config.OpenWebUiStartCommand}");
+			logger.Stage("config", $"Resolved package root ({config.PackageRootSource}): {config.PackageRoot}");
+			logger.Info($"Resolved BAT path: {config.BatLauncherPath}");
+			logger.Info($"Resolved llama path: {config.LlamaServerExePath}");
+			logger.Info($"StartupMode={config.StartupMode}; FallbackMode={config.FallbackMode}; WebUI={config.OpenWebUiStartCommand}");
 
 			if (string.Equals(config.FallbackMode, "always", StringComparison.OrdinalIgnoreCase))
 			{
@@ -66,7 +68,7 @@ public sealed class WrapperApp(
 				return new StartupResult(false, exitCode, orchestrationResult.Message, orchestrationResult.Category, orchestrationResult.Stage);
 			}
 
-			logger.Stage("startup", "Task 23 milestone completed (dual-service readiness + browser launch request)");
+			logger.Stage("startup", "Task 25 milestone completed (dual-service readiness + browser launch request)");
 			return new StartupResult(true, (int)WrapperExitCode.Success, orchestrationResult.Message, Stage: orchestrationResult.Stage);
 		}
 		catch (Exception ex)

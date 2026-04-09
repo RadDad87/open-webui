@@ -495,3 +495,9 @@ Validation guidance now records:
 - wrapper stage-by-stage outcomes (config, llama, webui, browser-launch)
 - wrapper exit code + terminal stage
 - BAT fallback evidence only when wrapper failure triggers support handoff
+
+
+### Task 25 Package-Root Resolution Blocker Fix
+
+Wrapper default package-root detection was corrected for published RC layout so it no longer collapses to `C:\\`.
+Resolved runtime and fallback paths are now anchored to the detected package root and logged at startup.

@@ -3,6 +3,7 @@ namespace Z3R4H.Wrapper.Config;
 public sealed class WrapperConfig
 {
 	public required string PackageRoot { get; init; }
+	public string PackageRootSource { get; init; } = "auto";
 	public required string BatLauncherPath { get; init; }
 	public required string LogFilePath { get; init; }
 
