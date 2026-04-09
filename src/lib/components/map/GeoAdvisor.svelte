@@ -182,8 +182,8 @@
 	$: drawMap();
 </script>
 
-<div class="w-full h-[calc(100vh-1rem)] max-h-[100dvh] p-3 md:p-4">
-	<div class="w-full h-full grid grid-cols-1 xl:grid-cols-[320px_1fr_360px] gap-3">
+<div class="w-full h-full min-h-0 p-3 md:p-4">
+	<div class="w-full h-full min-h-0 grid grid-cols-1 xl:grid-cols-[320px_1fr_360px] gap-3">
 		<aside class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur p-4 flex flex-col gap-3">
 			<div>
 				<div class="text-xs uppercase tracking-wide text-gray-500">Geo Advisor</div>
@@ -229,7 +229,7 @@
 			{/if}
 		</aside>
 
-		<section bind:this={mapContainer} class="relative rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-slate-950 min-h-[420px]">
+		<section bind:this={mapContainer} class="relative rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-slate-950 min-h-0">
 			<canvas
 				bind:this={canvasEl}
 				class="w-full h-full cursor-grab active:cursor-grabbing"
@@ -265,7 +265,7 @@
 			{/if}
 		</section>
 
-		<aside class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur p-4 overflow-y-auto min-h-[420px]">
+		<aside class="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur p-4 overflow-y-auto min-h-0">
 			<div class="flex items-center gap-2 mb-3">
 				<span class="text-lg">{intentIcon($geoAdvice?.intent)}</span>
 				<h3 class="font-semibold">Results</h3>

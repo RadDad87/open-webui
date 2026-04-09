@@ -11,7 +11,11 @@ export type GeoCoordinate = {
 type AdviceResponse = {
 	ok: boolean;
 	intent: GeoIntent;
-	structured_query: Record<string, unknown>;
+	structured_query: {
+		tool?: string;
+		payload?: Record<string, unknown>;
+		include_terrain?: boolean;
+	};
 	selected_results: Array<Record<string, unknown>>;
 	explanation: string;
 	warnings?: string[];
@@ -88,10 +92,16 @@ export const submitGeoQuery = async (question: string, mode: TravelMode) => {
 			const routePayload = {
 				locations: [DEFAULT_ORIGIN, DEFAULT_DESTINATION],
 				costing: COSTING_BY_MODE[mode],
-				units: 'kilometers'
+				units: 'kilometers',
+				...((advice.structured_query?.payload as Record<string, unknown>) ?? {})
 			};
 
-			const routeRes = await fetch('/api/geo/route?include_terrain=true', {
+			const includeTerrain =
+				typeof advice.structured_query?.include_terrain === 'boolean'
+					? advice.structured_query.include_terrain
+					: true;
+
+			const routeRes = await fetch(`/api/geo/route?include_terrain=${includeTerrain}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(routePayload)
@@ -102,13 +112,16 @@ export const submitGeoQuery = async (question: string, mode: TravelMode) => {
 			geoRoute.set((await routeRes.json()) as RouteResponse);
 		} else {
 			const queryType = advice.intent as 'camp' | 'farm' | 'shelter';
+			const structuredPayload =
+				(advice.structured_query?.payload as Record<string, unknown> | undefined) ?? {};
 			const sitePayload = {
 				query_type: queryType,
 				coordinates: DEFAULT_ORIGIN,
 				radius_km: 8,
 				constraints: {
 					access_mode: mode === 'car' ? 'vehicle' : mode === 'bicycle' ? 'mixed' : 'foot'
-				}
+				},
+				...structuredPayload
 			};
 
 			const siteRes = await fetch('/api/geo/site-search', {
