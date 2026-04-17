@@ -274,6 +274,9 @@
 												'does not make any external connections, and your data stays securely on your locally hosted server.'
 											)}
 										</div>
+										<div class="mt-1 text-xs font-medium text-gray-600 dark:text-gray-500">
+											{$i18n.t('Offline Survival AI for local-first operation.')}
+										</div>
 									{/if}
 								</div>
 
