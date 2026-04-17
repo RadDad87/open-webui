@@ -42,7 +42,7 @@ public sealed class ConfigResolver
 		var fallbackMode = GetValue("fallback", "auto");
 		var aiMode = GetValue("ai-mode", "auto");
 
-		var runtimeBackendDir = ResolvePathValue("runtime-backend-dir", "backend");
+		var runtimeBackendDir = ResolvePathValue("runtime-backend-dir", "runtime/backend");
 		var runtimeFrontendDir = ResolvePathValue("runtime-frontend-dir", "build");
 		var runtimeModelsDir = ResolvePathValue("runtime-models-dir", "models");
 		var runtimeRoutingDir = ResolvePathValue("runtime-routing-dir", "runtime/routing");
@@ -63,11 +63,11 @@ public sealed class ConfigResolver
 		var ollamaHost = GetValue("ollama-host", "127.0.0.1");
 		var ollamaPort = ParseInt(GetValue("ollama-port", "11434"), 11434);
 
-		var backendCmd = ResolveCommand(GetValue("backend-cmd", "open-webui serve"), packageRoot);
+		var backendCmd = ResolveCommand(GetValue("backend-cmd", "runtime/backend/start_backend.bat"), packageRoot);
 		var backendUrl = GetValue("backend-url", "http://localhost:8080").TrimEnd('/');
 		var backendHealth = GetValue("backend-health", $"{backendUrl}/health");
 
-		var valhallaCmd = ResolveCommand(GetValue("valhalla-cmd", string.Empty), packageRoot);
+		var valhallaCmd = ResolveCommand(GetValue("valhalla-cmd", "runtime/routing/start_valhalla.bat"), packageRoot);
 		var valhallaHealth = GetValue("valhalla-health", "http://127.0.0.1:8002/status");
 		var geoHealth = GetValue("geo-health", $"{backendUrl}/api/geo/health");
 
