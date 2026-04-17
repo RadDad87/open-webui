@@ -14,34 +14,64 @@ public sealed class ConfigResolver
 			: ResolvePackageRootFromExe(exeDir);
 		var packageRootSource = hasPackageRootOverride ? "arg" : "auto";
 
-		var startupMode = values.GetValueOrDefault("startup-mode", "exe-first");
-		var fallbackMode = values.GetValueOrDefault("fallback", "auto");
-		var aiMode = values.GetValueOrDefault("ai-mode", "auto");
+		var runtimeConfigPath = ResolveAgainstRoot(packageRoot, values.GetValueOrDefault("runtime-config", "runtime/runtime_config.env"));
+		var runtimeConfigValues = File.Exists(runtimeConfigPath)
+			? ParseKeyValueFile(runtimeConfigPath)
+			: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-		var llamaExe = values.GetValueOrDefault(
-			"llama-exe",
-			Path.Combine(packageRoot, "runtime", "llama.cpp", "llama-server.exe"));
-		var llamaModel = values.GetValueOrDefault(
-			"llama-model",
-			Path.Combine(packageRoot, "models", "model.gguf"));
-		var llamaHost = values.GetValueOrDefault("llama-host", "127.0.0.1");
-		var llamaPort = ParseInt(values.GetValueOrDefault("llama-port", "11434"), 11434);
+		string GetValue(string key, string fallback)
+		{
+			if (values.TryGetValue(key, out var argValue) && !string.IsNullOrWhiteSpace(argValue))
+			{
+				return argValue;
+			}
+			if (runtimeConfigValues.TryGetValue(key.Replace('-', '_').ToUpperInvariant(), out var runtimeValue) && !string.IsNullOrWhiteSpace(runtimeValue))
+			{
+				return runtimeValue;
+			}
+			return fallback;
+		}
 
-		var ollamaExe = values.GetValueOrDefault(
-			"ollama-exe",
-			Path.Combine(packageRoot, "runtime", "ollama", "ollama.exe"));
-		var ollamaHost = values.GetValueOrDefault("ollama-host", "127.0.0.1");
-		var ollamaPort = ParseInt(values.GetValueOrDefault("ollama-port", "11434"), 11434);
+		string ResolvePathValue(string key, string fallback)
+		{
+			var value = GetValue(key, fallback);
+			return ResolveAgainstRoot(packageRoot, value);
+		}
 
-		var backendCmd = values.GetValueOrDefault("backend-cmd", "open-webui serve");
-		var backendUrl = values.GetValueOrDefault("backend-url", "http://localhost:8080").TrimEnd('/');
-		var backendHealth = values.GetValueOrDefault("backend-health", $"{backendUrl}/health");
+		var startupMode = GetValue("startup-mode", "exe-first");
+		var fallbackMode = GetValue("fallback", "auto");
+		var aiMode = GetValue("ai-mode", "auto");
 
-		var valhallaCmd = values.GetValueOrDefault("valhalla-cmd", string.Empty);
-		var valhallaHealth = values.GetValueOrDefault("valhalla-health", "http://127.0.0.1:8002/status");
-		var geoHealth = values.GetValueOrDefault("geo-health", $"{backendUrl}/api/geo/health");
+		var runtimeBackendDir = ResolvePathValue("runtime-backend-dir", "backend");
+		var runtimeFrontendDir = ResolvePathValue("runtime-frontend-dir", "build");
+		var runtimeModelsDir = ResolvePathValue("runtime-models-dir", "models");
+		var runtimeRoutingDir = ResolvePathValue("runtime-routing-dir", "runtime/routing");
+		var runtimeDataDir = ResolvePathValue("runtime-data-dir", "data/geo");
+		var runtimeDemDir = ResolvePathValue("runtime-dem-dir", "data/geo/dem");
+		var runtimeLogsDir = ResolvePathValue("runtime-logs-dir", "logs");
+		var runtimeCacheDir = ResolvePathValue("runtime-cache-dir", "cache");
 
-		var mapsPath = values.GetValueOrDefault("maps-path", "/maps");
+		Directory.CreateDirectory(runtimeLogsDir);
+		Directory.CreateDirectory(runtimeCacheDir);
+
+		var llamaExe = ResolvePathValue("llama-exe", "runtime/llama.cpp/llama-server.exe");
+		var llamaModel = ResolvePathValue("llama-model", "models/model.gguf");
+		var llamaHost = GetValue("llama-host", "127.0.0.1");
+		var llamaPort = ParseInt(GetValue("llama-port", "11434"), 11434);
+
+		var ollamaExe = ResolvePathValue("ollama-exe", "runtime/ollama/ollama.exe");
+		var ollamaHost = GetValue("ollama-host", "127.0.0.1");
+		var ollamaPort = ParseInt(GetValue("ollama-port", "11434"), 11434);
+
+		var backendCmd = ResolveCommand(GetValue("backend-cmd", "open-webui serve"), packageRoot);
+		var backendUrl = GetValue("backend-url", "http://localhost:8080").TrimEnd('/');
+		var backendHealth = GetValue("backend-health", $"{backendUrl}/health");
+
+		var valhallaCmd = ResolveCommand(GetValue("valhalla-cmd", string.Empty), packageRoot);
+		var valhallaHealth = GetValue("valhalla-health", "http://127.0.0.1:8002/status");
+		var geoHealth = GetValue("geo-health", $"{backendUrl}/api/geo/health");
+
+		var mapsPath = GetValue("maps-path", "/maps");
 		if (!mapsPath.StartsWith('/'))
 		{
 			mapsPath = "/" + mapsPath;
@@ -52,32 +82,41 @@ public sealed class ConfigResolver
 			PackageRoot = packageRoot,
 			PackageRootSource = packageRootSource,
 			BatLauncherPath = Path.Combine(packageRoot, "launch_z3r4h.bat"),
-			LogFilePath = Path.Combine(packageRoot, "z3r4h_launcher.log"),
+			RuntimeConfigPath = runtimeConfigPath,
+			LogFilePath = Path.Combine(runtimeLogsDir, "z3r4h_wrapper.log"),
+			RuntimeBackendDir = runtimeBackendDir,
+			RuntimeFrontendDir = runtimeFrontendDir,
+			RuntimeModelsDir = runtimeModelsDir,
+			RuntimeRoutingDir = runtimeRoutingDir,
+			RuntimeDataDir = runtimeDataDir,
+			RuntimeDemDir = runtimeDemDir,
+			RuntimeLogsDir = runtimeLogsDir,
+			RuntimeCacheDir = runtimeCacheDir,
 			AiMode = aiMode,
 			LlamaServerExePath = llamaExe,
 			LlamaModelPath = llamaModel,
 			LlamaHost = llamaHost,
 			LlamaPort = llamaPort,
-			LlamaReadyTimeoutSeconds = ParseInt(values.GetValueOrDefault("llama-timeout", "120"), 120),
-			LlamaReadyPollSeconds = ParseInt(values.GetValueOrDefault("llama-poll", "2"), 2),
+			LlamaReadyTimeoutSeconds = ParseInt(GetValue("llama-timeout", "120"), 120),
+			LlamaReadyPollSeconds = ParseInt(GetValue("llama-poll", "2"), 2),
 			OllamaExePath = ollamaExe,
 			OllamaHost = ollamaHost,
 			OllamaPort = ollamaPort,
-			OllamaReadyTimeoutSeconds = ParseInt(values.GetValueOrDefault("ollama-timeout", "120"), 120),
-			OllamaReadyPollSeconds = ParseInt(values.GetValueOrDefault("ollama-poll", "2"), 2),
+			OllamaReadyTimeoutSeconds = ParseInt(GetValue("ollama-timeout", "120"), 120),
+			OllamaReadyPollSeconds = ParseInt(GetValue("ollama-poll", "2"), 2),
 			BackendStartCommand = backendCmd,
 			BackendUrl = backendUrl,
 			BackendHealthUrl = backendHealth,
-			BackendReadyTimeoutSeconds = ParseInt(values.GetValueOrDefault("backend-timeout", "180"), 180),
-			BackendReadyPollSeconds = ParseInt(values.GetValueOrDefault("backend-poll", "2"), 2),
+			BackendReadyTimeoutSeconds = ParseInt(GetValue("backend-timeout", "180"), 180),
+			BackendReadyPollSeconds = ParseInt(GetValue("backend-poll", "2"), 2),
 			ValhallaStartCommand = valhallaCmd,
 			ValhallaHealthUrl = valhallaHealth,
-			ValhallaReadyTimeoutSeconds = ParseInt(values.GetValueOrDefault("valhalla-timeout", "120"), 120),
-			ValhallaReadyPollSeconds = ParseInt(values.GetValueOrDefault("valhalla-poll", "2"), 2),
+			ValhallaReadyTimeoutSeconds = ParseInt(GetValue("valhalla-timeout", "120"), 120),
+			ValhallaReadyPollSeconds = ParseInt(GetValue("valhalla-poll", "2"), 2),
 			GeoHealthUrl = geoHealth,
-			GeoHealthTimeoutSeconds = ParseInt(values.GetValueOrDefault("geo-timeout", "120"), 120),
-			GeoHealthPollSeconds = ParseInt(values.GetValueOrDefault("geo-poll", "2"), 2),
-			BrowserStartUrl = values.GetValueOrDefault("browser-url", $"{backendUrl}{mapsPath}"),
+			GeoHealthTimeoutSeconds = ParseInt(GetValue("geo-timeout", "120"), 120),
+			GeoHealthPollSeconds = ParseInt(GetValue("geo-poll", "2"), 2),
+			BrowserStartUrl = GetValue("browser-url", $"{backendUrl}{mapsPath}"),
 			StartupMode = startupMode,
 			FallbackMode = fallbackMode
 		};
@@ -120,6 +159,40 @@ public sealed class ConfigResolver
 	private static int ParseInt(string value, int fallback)
 		=> int.TryParse(value, out var parsed) ? parsed : fallback;
 
+	private static string ResolveAgainstRoot(string root, string value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+		{
+			return value;
+		}
+		if (Path.IsPathRooted(value))
+		{
+			return Path.GetFullPath(value);
+		}
+		return Path.GetFullPath(Path.Combine(root, value));
+	}
+
+	private static string ResolveCommand(string command, string packageRoot)
+	{
+		if (string.IsNullOrWhiteSpace(command))
+		{
+			return string.Empty;
+		}
+
+		if (command.Contains(' ') || command.Contains('"'))
+		{
+			return command;
+		}
+
+		var candidate = ResolveAgainstRoot(packageRoot, command);
+		if (File.Exists(candidate))
+		{
+			return $"\"{candidate}\"";
+		}
+
+		return command;
+	}
+
 	private static Dictionary<string, string> ParseArgs(string[] args)
 	{
 		var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -136,6 +209,31 @@ public sealed class ConfigResolver
 				dict[parts[0]] = parts[1];
 			}
 		}
+		return dict;
+	}
+
+	private static Dictionary<string, string> ParseKeyValueFile(string path)
+	{
+		var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		foreach (var raw in File.ReadAllLines(path))
+		{
+			var line = raw.Trim();
+			if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal))
+			{
+				continue;
+			}
+
+			var idx = line.IndexOf('=');
+			if (idx <= 0)
+			{
+				continue;
+			}
+
+			var key = line[..idx].Trim();
+			var val = line[(idx + 1)..].Trim();
+			dict[key] = val;
+		}
+
 		return dict;
 	}
 }

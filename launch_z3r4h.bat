@@ -5,21 +5,44 @@ REM Z3R4H Windows launcher (localhost/offline path)
 
 REM --- Config ---
 set "PACKAGE_ROOT=%~dp0"
-set "LLAMA_SERVER_EXE=%PACKAGE_ROOT%runtime\llama.cpp\llama-server.exe"
-set "MODEL_PATH=%PACKAGE_ROOT%models\model.gguf"
+set "RUNTIME_CONFIG_FILE=%PACKAGE_ROOT%runtime\runtime_config.env"
+
+if exist "%RUNTIME_CONFIG_FILE%" (
+	for /f "usebackq tokens=1,* delims==" %%A in ("%RUNTIME_CONFIG_FILE%") do (
+		set "cfg_key=%%~A"
+		set "cfg_val=%%~B"
+		if defined cfg_key if not "!cfg_key:~0,1!"=="#" if not "!cfg_key!"=="" set "!cfg_key!=!cfg_val!"
+	)
+)
+
+if not defined LLAMA_SERVER_EXE set "LLAMA_SERVER_EXE=runtime\llama.cpp\llama-server.exe"
+if not defined LLAMA_MODEL_PATH set "LLAMA_MODEL_PATH=models\model.gguf"
+call :resolve_path LLAMA_SERVER_EXE
+call :resolve_path LLAMA_MODEL_PATH
+
+set "MODEL_PATH=%LLAMA_MODEL_PATH%"
 set "LLAMA_HOST=127.0.0.1"
 set "LLAMA_PORT=11434"
 
 REM Open WebUI startup mode:
 REM - external (default): uses `open-webui` from PATH
 REM - bundled: uses OPEN_WEBUI_BUNDLED_EXE
-set "OPEN_WEBUI_START_MODE=external"
-set "OPEN_WEBUI_BUNDLED_EXE=%PACKAGE_ROOT%runtime\open-webui\open-webui.exe"
-set "OPEN_WEBUI_START_CMD=open-webui serve"
+if not defined OPEN_WEBUI_START_MODE set "OPEN_WEBUI_START_MODE=bundled"
+if not defined OPEN_WEBUI_BUNDLED_EXE set "OPEN_WEBUI_BUNDLED_EXE=runtime\open-webui\open-webui.exe"
+call :resolve_path OPEN_WEBUI_BUNDLED_EXE
+if not defined BACKEND_CMD set "BACKEND_CMD=open-webui serve"
+set "OPEN_WEBUI_START_CMD=%BACKEND_CMD%"
 
-set "OPEN_WEBUI_URL=http://localhost:8080"
+if not defined BACKEND_URL (
+	set "OPEN_WEBUI_URL=http://localhost:8080"
+) else (
+	set "OPEN_WEBUI_URL=%BACKEND_URL%"
+)
 set "OPEN_WEBUI_PORT=8080"
-set "LOG_FILE=%~dp0z3r4h_launcher.log"
+if not defined RUNTIME_LOGS_DIR set "RUNTIME_LOGS_DIR=logs"
+call :resolve_path RUNTIME_LOGS_DIR
+if not exist "%RUNTIME_LOGS_DIR%" mkdir "%RUNTIME_LOGS_DIR%" >nul 2>&1
+set "LOG_FILE=%RUNTIME_LOGS_DIR%\z3r4h_launcher.log"
 
 REM Verified Open WebUI env vars in this repo/version:
 REM - ENABLE_OPENAI_API
@@ -78,7 +101,7 @@ if /I "%OPEN_WEBUI_START_MODE%"=="bundled" (
 ) else (
 	where open-webui >nul 2>&1
 	if errorlevel 1 (
-		call :fail "External Open WebUI mode selected but open-webui not found in PATH. Set OPEN_WEBUI_START_MODE=bundled and configure OPEN_WEBUI_BUNDLED_EXE, or install open-webui in PATH."
+		call :fail "External Open WebUI mode selected but open-webui not found in PATH. Portable mode expects bundled runtime by default."
 		exit /b 1
 	)
 	call :log "Open WebUI startup mode: external (open-webui in PATH)"
@@ -175,6 +198,16 @@ goto wait_webui_loop
 set "ts=%date% %time%"
 echo [%ts%] %~1
 >> "%LOG_FILE%" echo [%ts%] %~1
+exit /b 0
+
+:resolve_path
+set "_rp_name=%~1"
+call set "_rp_value=%%%_rp_name%%%"
+if not defined _rp_value exit /b 0
+if "%_rp_value:~1,1%"==":" exit /b 0
+if "%_rp_value:~0,2%"=="\\" exit /b 0
+set "_rp_value=%PACKAGE_ROOT%%_rp_value%"
+call set "%_rp_name%=%_rp_value%"
 exit /b 0
 
 :fail

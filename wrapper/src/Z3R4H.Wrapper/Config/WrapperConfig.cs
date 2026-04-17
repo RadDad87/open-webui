@@ -6,6 +6,16 @@ public sealed class WrapperConfig
 	public string PackageRootSource { get; init; } = "auto";
 	public required string BatLauncherPath { get; init; }
 	public required string LogFilePath { get; init; }
+	public required string RuntimeConfigPath { get; init; }
+
+	public required string RuntimeBackendDir { get; init; }
+	public required string RuntimeFrontendDir { get; init; }
+	public required string RuntimeModelsDir { get; init; }
+	public required string RuntimeRoutingDir { get; init; }
+	public required string RuntimeDataDir { get; init; }
+	public required string RuntimeDemDir { get; init; }
+	public required string RuntimeLogsDir { get; init; }
+	public required string RuntimeCacheDir { get; init; }
 
 	public string AiMode { get; init; } = "auto"; // auto | llama | ollama
 	public required string LlamaServerExePath { get; init; }
