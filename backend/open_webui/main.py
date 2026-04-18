@@ -72,6 +72,7 @@ from open_webui.routers import (
     analytics,
     audio,
     images,
+    geo,
     ollama,
     openai,
     retrieval,
@@ -1522,6 +1523,7 @@ if ENABLE_ADMIN_ANALYTICS:
     app.include_router(analytics.router, prefix='/api/v1/analytics', tags=['analytics'])
 app.include_router(utils.router, prefix='/api/v1/utils', tags=['utils'])
 app.include_router(terminals.router, prefix='/api/v1/terminals', tags=['terminals'])
+app.include_router(geo.router, prefix='/api/geo', tags=['geo'])
 
 # SCIM 2.0 API for identity management
 if ENABLE_SCIM:
